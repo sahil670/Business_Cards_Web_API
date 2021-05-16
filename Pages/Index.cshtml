@@ -1,0 +1,334 @@
+﻿@page
+@{}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Business Cards</title></title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+
+    <div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+            <a class="navbar-brand" href="#">Business Cards</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarText">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active">
+                        <button class="btn btn-outline-dark" data-toggle="modal" data-target="#addCard">Add Business Card</button>
+                    </li>
+                  
+                </ul>
+                
+            </div>
+        </nav>
+
+
+        <div class="container" id="allCards">
+           
+            
+        </div>
+    </div>
+
+
+
+
+
+
+
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script>
+        var uri = 'api/BusinessCards';
+
+        $(document).ready(function () {
+          
+            $.getJSON(uri)
+                .done(function (data) {
+
+                    $("#businessCard").tmpl(data).appendTo("#allCards");
+                });
+        });
+
+
+
+        function getBusinessCards() {
+
+               $.getJSON(uri)
+                   .done(function (data) {
+
+                       $("#allCards").text("");
+
+                    $("#businessCard").tmpl(data).appendTo("#allCards");
+                });
+
+        }
+
+        function addCard() {
+            var _fullName = $('#fullName').val();
+            var _position = $('#position').val();
+            var _company = $('#company').val();
+            var _contactNumber = $('#contactNumber').val();
+            var _email = $('#email').val();
+           
+
+
+            var card = {
+                fullName :  _fullName ,
+                position :_position,
+                company:  _company, 
+                contactNumber :_contactNumber ,
+                email :  _email
+           
+            };
+
+            $.ajax({
+                type: "POST",
+                url: uri,
+                data: JSON.stringify(card),
+                contentType: "application/json; charset=utf-8"
+            }).done(function (response) {
+                $("#result").html("Inserted the business card ");
+                getBusinessCards();
+            }).fail(function (jqXHR, textStatus) {
+                          $("#result").html("FAILED adding card.");
+               });
+
+
+
+
+        }
+
+
+
+
+
+        function updateCard() {
+           var _fullName = $('#_fullName').val();
+            var _position = $('#_position').val();
+            var _company = $('#_company').val();
+            var _contactNumber =$('#_contactNumber').val();
+            var _email = $('#_email').val();
+          
+
+
+            
+            var card = {
+                 id : parseInt($('#_id').val()),
+                fullName :  _fullName ,
+                position :_position,
+                company:  _company, 
+                contactNumber :_contactNumber ,
+                email :  _email
+           
+            };
+
+            $.ajax({
+                type: "PUT",
+                url: uri+"/"+ $('#_id').val(),
+                data: JSON.stringify(card),
+                contentType: "application/json; charset=utf-8"
+            }).done(function (response) {
+                $("#resultUpdate").html("Updated the business card");
+                getBusinessCards();
+            }).fail(function (jqXHR, textStatus) {
+                          $("#resultUpdate").html("FAILED to update the card");
+               });;
+
+
+
+
+        }
+
+
+
+        function remove(id) {
+
+
+          var yes =  confirm("Remove tis card from registry?");
+
+            if (yes) {
+                $.ajax({
+                    type: "DELETE",
+                    url: uri + "/" + id,
+
+                }).done(function (response) {
+
+                    getBusinessCards();
+                });
+
+            }
+
+
+        }
+
+
+         
+
+
+        function showBusinessCard(id) {
+
+             $.ajax({
+                type: "GET",
+                url: uri+"/"+id,
+               contentType: "application/json"
+             }).done(function (response) {
+
+                  $('#_id').val(response.id);
+                 $('#_fullName').val(response.fullName);
+                 $('#_company').val(response.company);
+                 $('#_contactNumber').val(response.contactNumber);
+                 $('#_email').val(response.email);
+                 $('#_position').val(response.position);
+
+              
+
+
+            });
+
+
+        }
+    </script>
+
+    
+
+    <script id="businessCard" type="text/x-jquery-tmpl">
+
+
+        <div class="card border-secondary mb-3" style="width: 100%;">
+            <div class="card-body">
+                <h5 class="card-title">${company}</h5>
+                <h6 class="card-text"> ${fullName}   - ${position}</h6>
+                <p class="card-text"> Mobile   - ${contactNumber}</p>
+                <p class="card-text"> Email   - ${email}</p>
+            </div>
+
+            <button class="btn btn-outline-primary" onclick="showBusinessCard('${id}')" data-toggle="modal" data-target="#updateCard">Update</button>
+            <a href="#" class="btn btn-outline-danger" onclick="remove('${id}')">Remove Card</a>
+        </div>
+
+      
+
+
+    </script>
+
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="addCard">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Business Card</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" class="form-control" id="fullName" >
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Company</label>
+                            <input type="text" class="form-control" id="company" >
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Position</label>
+                            <input type="text" class="form-control" id="position" >
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Email </label>
+                            <input type="text" class="form-control" id="email" >
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Contact Number</label>
+                            <input type="text" class="form-control" id="contactNumber">
+
+                        </div>
+
+                        <div class="form-group" id="result">
+
+
+                        </div>
+                        <button type="button" onclick="addCard()" class="btn btn-primary">Add Card</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="updateCard">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Business Card</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+
+                        <div class="form-group">
+
+                            <input type="hidden" class="form-control" id="_id" aria-describedby="emailHelp">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" class="form-control" id="_fullName">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Company</label>
+                            <input type="text" class="form-control" id="_company">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Position</label>
+                            <input type="text" class="form-control" id="_position">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Email </label>
+                            <input type="text" class="form-control" id="_email">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Contact Number</label>
+                            <input type="text" class="form-control" id="_contactNumber">
+
+                        </div>
+
+                        <div class="form-group" id="resultUpdate">
+
+
+                        </div>
+                        <button type="button" onclick="updateCard()" class="btn btn-primary">Update Card</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
